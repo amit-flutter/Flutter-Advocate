@@ -1,6 +1,8 @@
+import 'package:advocate/controller/network/firebase.dart';
 import 'package:advocate/screen/widgets/small_widget.dart';
 import 'package:advocate/utils/imports.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
+import 'dart:convert';
 
 class AddClient extends StatefulWidget {
   const AddClient({super.key});
@@ -12,11 +14,14 @@ class AddClient extends StatefulWidget {
 class _AddClientState extends State<AddClient> {
   TextEditingController nameController = TextEditingController();
   TextEditingController clientNumberController = TextEditingController();
+  String base64File = "";
 
-  void submitForm() {
+  Future<void> submitForm() async {
+    Get.back();
     String name = nameController.text;
     String number = clientNumberController.text;
-    print("Name--> $name Number--> $number");
+    Logger.logPrint(title: "Adding new Client", body: "$name - $number");
+    await FirebaseController.instance.addNewClient(name, number);
   }
 
   @override
@@ -28,7 +33,7 @@ class _AddClientState extends State<AddClient> {
       body: SingleChildScrollView(
         child: Form(
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
                 //Name
@@ -76,46 +81,21 @@ class FileUpload extends StatelessWidget {
         // }
       },
       hoverColor: Colors.transparent,
-      child: SizedBox(
-        height: 200,
-        width: 300,
-        child: Stack(
-          children: [
-            DropzoneView(
-              onCreated: (controller) => this.controller = controller,
-              onDrop: (dynamic ev) => print('Drop: ${ev.name}'),
-            ),
-            Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(.2),
-                      blurRadius: 10.0, // soften the shadow
-                      spreadRadius: 5.0, //extend the shadow
-                      offset: const Offset(2, 2),
-                    )
-                  ],
-                  // border: Border.all(strokeAlign: 2, color: Colors.white, width: 2),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    const Icon(Icons.cloud_upload_outlined, size: 40),
-                    CustomElevatedButton(
-                        onPressed: () async {
-                          final events = await controller!.pickFiles();
-                          print(events.first.name);
-                        },
-                        text: "Upload File"),
-                    const DefaultText(text: "or drop file"),
-                  ],
-                ))
-          ],
-        ),
-      ),
+      child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const DefaultText(text: "Choose client documents"),
+              CustomElevatedButton(
+                  onPressed: () async {
+                    final events = await controller!.pickFiles();
+                    print(events.first.name);
+                  },
+                  text: "Upload File"),
+            ],
+          )),
     );
   }
 }

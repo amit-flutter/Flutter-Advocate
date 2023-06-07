@@ -1,4 +1,7 @@
+import 'package:advocate/controller/network/firebase.dart';
+import 'package:advocate/screen/widgets/small_widget.dart';
 import 'package:advocate/utils/imports.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,31 +12,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
+  String searchKey = '';
 
-  final List _restaurantsData = [
-    ["Loyal Fire", "5", "10"],
-    ["Momento", "4", "12"],
-    ["Zesty", "4.5", "2"],
-    ["Pizzahut", "3", "5"],
-  ];
-
-  final List _searchResultData = [];
-
-  void getMatch() {
-    String value = _searchController.text;
-    for (var item in _restaurantsData) {
-      if (item[0].contains(value) || item[1] == value || item[2] == value && !_searchResultData.contains(item)) {
-        setState(() => _searchResultData.add(item));
-      }
-      if (value == "") setState(() => _searchResultData.clear());
-    }
-  }
-
-  void clearSearch() {
-    setState(() {
-      _searchController.text = "";
-      _searchResultData.clear();
-    });
+  @override
+  void initState() {
+    Get.put(FirebaseController());
+    super.initState();
   }
 
   @override
@@ -42,22 +26,45 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(title: const Text("Top Restaurant Near You 🍱")),
       body: Column(
         children: [
+          //Search Bar
           ListTile(
             title: TextField(
               controller: _searchController,
-              onChanged: (value) => getMatch(),
+              onChanged: (value) => setState(() => searchKey = value),
               decoration: const InputDecoration(
                 hintText: "🔍  Search restaurant by Name, Km, Rating ",
                 enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
                 focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.0)),
               ),
             ),
-            trailing: IconButton(icon: const Icon(Icons.clear), onPressed: () => clearSearch()),
+            trailing: IconButton(icon: const Icon(Icons.clear), onPressed: () => setState(() => searchKey = "")),
           ),
           Expanded(
-            child: _searchResultData.isEmpty
-                ? RestaurantListView(listData: _restaurantsData)
-                : RestaurantListView(listData: _searchResultData),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseController.instance.clientInfoStream,
+                builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.hasError) return const Text('Something went wrong');
+
+                  if (snapshot.hasData) {
+                    return ListView.builder(
+                      itemCount: snapshot.data?.docs.length,
+                      itemBuilder: (context, index) {
+                        if (searchKey.isEmpty) return HomeClientCard(snapshot.data!.docs[index]);
+                        if (snapshot.data!.docs[index]['name'].toString().contains(searchKey)) {
+                          return HomeClientCard(snapshot.data!.docs[index]);
+                        } else {
+                          return const SizedBox();
+                        }
+                      },
+                    );
+                  }
+
+                  return const Text("loading");
+                },
+              ),
+            ),
           ),
         ],
       ),
@@ -67,29 +74,49 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class RestaurantListView extends StatelessWidget {
-  const RestaurantListView({super.key, required this.listData});
+class HomeClientCard extends StatelessWidget {
+  const HomeClientCard(this.snapShotData, {super.key});
 
-  final List listData;
+  final QueryDocumentSnapshot<Object?> snapShotData;
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: listData.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(listData[index][0]),
-            leading: SizedBox(
-              width: 50,
-              child: Row(
-                children: [
-                  const Icon(Icons.star),
-                  Text(listData[index][1]),
-                ],
+    return InkWell(
+      onTap: () {},
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 5),
+        padding: EdgeInsets.all(3),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(25),
+              child: Image.network(
+                "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0"
+                ".3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGVyc29ufGVufDB8fDB8fHww&w=1000&q=80",
+                height: 50,
+                width: 50,
+                fit: BoxFit.cover,
               ),
             ),
-            trailing: Text("${listData[index][2]} Km"),
-          );
-        });
+            WidgetConst.kWidthSpacer(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DefaultText(
+                  text: snapShotData['name'].toString().capitalizeFirst!,
+                  style: Get.textTheme.titleLarge!,
+                ),
+                DefaultText(
+                  text: snapShotData['number'].toString(),
+                  style: Get.textTheme.titleMedium!,
+                ),
+              ],
+            ),
+            Spacer(),
+            Icon(Icons.keyboard_arrow_right_rounded),
+          ],
+        ),
+      ),
+    );
   }
 }
