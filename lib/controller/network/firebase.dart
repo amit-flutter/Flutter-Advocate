@@ -16,7 +16,7 @@ class FirebaseController extends GetxController {
   }
 
   //Add new data to firebase
-  Future<void> addNewClient(String name, String number, String downloadFileUrl) {
+  Future<void> addNewClient(String name, String number, List<String> downloadFileUrl) {
     return client
         .add({"time": DateTime.now(), 'name': name, 'number': number, 'fileUrl': downloadFileUrl})
         .then((value) => Logger.logPrint(title: "Client Added"))

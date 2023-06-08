@@ -1,7 +1,6 @@
 import 'package:advocate/controller/network/firebase.dart';
 import 'package:advocate/screen/widgets/small_widget.dart';
 import 'package:advocate/utils/imports.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,7 +36,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 focusedBorder: OutlineInputBorder(borderSide: BorderSide(width: 1.0)),
               ),
             ),
-            trailing: IconButton(icon: const Icon(Icons.clear), onPressed: () => setState(() => searchKey = "")),
+            trailing: IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () => setState(() {
+                searchKey = "";
+                _searchController.clear();
+              }),
+            ),
           ),
           Expanded(
             child: Padding(
