@@ -14,17 +14,17 @@ dependencies:
   #Ui-Helper
 
   #DateBase
+
   #State-Management
   get: ^4.6.5
 
   #Service Provider
   file_picker: ^5.3.2
-  http: ^1.0.0
-  flutter_dropzone: ^3.0.5
 
   #Firebase
   firebase_core: ^2.13.1
   cloud_firestore: ^4.8.0
+  firebase_storage: ^11.2.2
 
   #network
 

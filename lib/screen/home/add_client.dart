@@ -1,8 +1,12 @@
+import 'dart:io';
+import 'dart:math';
+
 import 'package:advocate/controller/network/firebase.dart';
 import 'package:advocate/screen/widgets/small_widget.dart';
+import 'package:advocate/utils/extension.dart';
 import 'package:advocate/utils/imports.dart';
-import 'package:flutter_dropzone/flutter_dropzone.dart';
-import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class AddClient extends StatefulWidget {
   const AddClient({super.key});
@@ -12,16 +16,33 @@ class AddClient extends StatefulWidget {
 }
 
 class _AddClientState extends State<AddClient> {
-  TextEditingController nameController = TextEditingController();
-  TextEditingController clientNumberController = TextEditingController();
-  String base64File = "";
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _clientNumberController = TextEditingController();
+  PlatformFile? _pickedFile;
+  UploadTask? _uploadTask;
+
+  Future selectFile() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result == null) return;
+    setState(() => _pickedFile = result.files.first);
+  }
 
   Future<void> submitForm() async {
     Get.back();
-    String name = nameController.text;
-    String number = clientNumberController.text;
+
+    String name = _nameController.text;
+    String number = _clientNumberController.text;
+    final path = 'file/$number/${_pickedFile!.name}';
+    final file = File(_pickedFile!.path!);
+
+    final ref = FirebaseStorage.instance.ref().child(path);
+    _uploadTask = ref.putFile(file);
+
+    final TaskSnapshot snapshot = await _uploadTask!.whenComplete(() {});
+    final String urlDownload = await snapshot.ref.getDownloadURL();
+
     Logger.logPrint(title: "Adding new Client", body: "$name - $number");
-    await FirebaseController.instance.addNewClient(name, number);
+    await FirebaseController.instance.addNewClient(name, number, urlDownload);
   }
 
   @override
@@ -38,18 +59,37 @@ class _AddClientState extends State<AddClient> {
               children: [
                 //Name
                 WidgetConst.kHeightSpacer(),
-                CustomTextField(title: "Name", keyBoardType: TextInputType.text, textFieldController: nameController),
+                CustomTextField(title: "Name", keyBoardType: TextInputType.text, textFieldController: _nameController),
 
                 //Number
                 WidgetConst.kHeightSpacer(),
                 CustomTextField(
                     title: "Client Number",
                     keyBoardType: TextInputType.text,
-                    textFieldController: clientNumberController),
+                    textFieldController: _clientNumberController),
 
                 //FilePicker
                 WidgetConst.kHeightSpacer(heightMultiplier: 2),
-                FileUpload(),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(
+                        child: DefaultText(text: "Choose client documents", maxLines: 2, textAlign: TextAlign.start)),
+                    Expanded(child: CustomElevatedButton(onPressed: selectFile, text: "Upload File")),
+                    if (_pickedFile != null)
+                      Container(
+                        width: 40,
+                        height: 40,
+                        margin: const EdgeInsets.only(left: 10),
+                        child: _pickedFile!.extension! == "jpeg" ||
+                                _pickedFile!.extension! == "jpg" ||
+                                _pickedFile!.extension! == "png"
+                            ? Image.file(File(_pickedFile!.path!), fit: BoxFit.cover)
+                            : const Icon(Icons.picture_as_pdf_outlined, size: 30, color: Colors.green),
+                      ).radius()
+                  ],
+                ),
                 //Submit Button
                 WidgetConst.kHeightSpacer(heightMultiplier: 3),
                 CustomElevatedButton(onPressed: () async => submitForm(), text: "Submit")
@@ -58,44 +98,6 @@ class _AddClientState extends State<AddClient> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class FileUpload extends StatelessWidget {
-  FileUpload({super.key});
-
-  DropzoneViewController? controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () async {
-        // if (events.isEmpty) {
-        //   return;
-        // } else {
-        //   Logger.logPrint(title: "${events.first.name}");
-        //   Logger.logPrint(title: await controller.getFileMIME(events));
-        //   Logger.logPrint(title: "${await controller.getFileSize(events)}");
-        //   Logger.logPrint(title: "${await controller.getFileData(events)}");
-        // }
-      },
-      hoverColor: Colors.transparent,
-      child: Container(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const DefaultText(text: "Choose client documents"),
-              CustomElevatedButton(
-                  onPressed: () async {
-                    final events = await controller!.pickFiles();
-                    print(events.first.name);
-                  },
-                  text: "Upload File"),
-            ],
-          )),
     );
   }
 }
