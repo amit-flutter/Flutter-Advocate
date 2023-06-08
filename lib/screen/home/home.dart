@@ -1,5 +1,3 @@
-import 'package:advocate/controller/network/firebase.dart';
-import 'package:advocate/screen/widgets/small_widget.dart';
 import 'package:advocate/utils/imports.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,11 +20,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Top Restaurant Near You 🍱")),
+      appBar: AppBar(title: const Text("Advocate ⚖︎")),
       body: Column(
         children: [
           //Search Bar
+          WidgetConst.kHeightSpacer(),
           ListTile(
+            visualDensity: VisualDensity.compact,
+            minVerticalPadding: 0,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
             title: TextField(
               controller: _searchController,
               onChanged: (value) => setState(() => searchKey = value),
@@ -37,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             trailing: IconButton(
+              visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.clear),
               onPressed: () => setState(() {
                 searchKey = "";
@@ -46,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseController.instance.clientInfoStream,
                 builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -89,8 +92,8 @@ class HomeClientCard extends StatelessWidget {
     return InkWell(
       onTap: () {},
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5),
-        padding: EdgeInsets.all(3),
+        margin: const EdgeInsets.symmetric(vertical: 5),
+        padding: const EdgeInsets.all(3),
         child: Row(
           children: [
             ClipRRect(
@@ -117,8 +120,10 @@ class HomeClientCard extends StatelessWidget {
                 ),
               ],
             ),
-            Spacer(),
-            Icon(Icons.keyboard_arrow_right_rounded),
+            const Spacer(),
+            InkWell(
+                onTap: () => Get.toNamed(RouteConst.kClientInfo),
+                child: const Icon(Icons.keyboard_arrow_right_rounded, size: 35)),
           ],
         ),
       ),
