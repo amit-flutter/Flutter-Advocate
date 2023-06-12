@@ -14,6 +14,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     Get.put(FirebaseController());
+    Get.put(ClientInfoController());
     super.initState();
   }
 
@@ -47,6 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
               }),
             ),
           ),
+
+          //Body Part
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -90,7 +93,10 @@ class HomeClientCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: () {
+        ClientInfoController.instance.clientInfo.value = snapShotData;
+        Get.toNamed(RouteConst.kClientInfo);
+      },
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 5),
         padding: const EdgeInsets.all(3),
@@ -121,9 +127,7 @@ class HomeClientCard extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            InkWell(
-                onTap: () => Get.toNamed(RouteConst.kClientInfo),
-                child: const Icon(Icons.keyboard_arrow_right_rounded, size: 35)),
+            const Icon(Icons.keyboard_arrow_right_rounded, size: 35),
           ],
         ),
       ),

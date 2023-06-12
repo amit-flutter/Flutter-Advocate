@@ -11,6 +11,7 @@ export 'package:firebase_storage/firebase_storage.dart';
 
 //Controller
 export 'package:advocate/controller/network/firebase.dart';
+export 'package:advocate/controller/client_info.dart';
 
 //util
 export 'package:advocate/utils/logger.dart';

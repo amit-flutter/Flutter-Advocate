@@ -12,6 +12,7 @@ dependencies:
   cupertino_icons: ^1.0.2
 
   #Ui-Helper
+  any_link_preview: ^3.0.0
 
   #DateBase
 
@@ -20,6 +21,7 @@ dependencies:
 
   #Service Provider
   file_picker: ^5.3.2
+  file_manager: ^1.0.2
 
   #Firebase
   firebase_core: ^2.13.1
